@@ -67,7 +67,6 @@ void loop() {
     );
 
     if (result == ESP_OK) {
-      Serial.print("Humedad suelo enviada: ");
       Serial.println(value);
     } else {
       Serial.println("Error al enviar");
