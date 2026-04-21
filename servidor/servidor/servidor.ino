@@ -13,7 +13,7 @@ String serverDatos = "http://10.42.0.1:8000/sensor-data";
 
 // 🔥 ESTRUCTURA UNIFICADA (igual en TODOS los ESP)
 typedef struct struct_message {
-  int tipo;          // 1 = DHT, 2 = suelo
+  int tipo;  // 1 = DHT, 2 = suelo
   float temperature;
   float humidity;
   int moisture;
@@ -129,6 +129,12 @@ void loop() {
       if (hayDatos) {
         enviarDatos();
         // hayDatos = false; // opcional si quieres evitar envíos repetidos
+
+        Serial.print(tempGlobal);
+        Serial.print(",");
+        Serial.print(humGlobal);
+        Serial.print(",");
+        Serial.println(soilGlobal);
       }
     }
 

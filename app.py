@@ -105,7 +105,7 @@ async def create_cultivo(data: Ph, db: Session = Depends(get_db)):
         estacion_id = data.estacion_id
 
         if estacion_id is None:
-             estacion = db.query(Estaciones).first()  # o lógica real
+             estacion = db.query(Estaciones).first()
              estacion_id = estacion.id
         else:
             raise HTTPException(status_code=404, detail="estacion no existe")
