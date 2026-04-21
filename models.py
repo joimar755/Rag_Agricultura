@@ -1,7 +1,7 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, FLOAT, Text
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, FLOAT, Text, TIMESTAMP, text
 from sqlalchemy.orm import relationship
 
-from .database import Base
+from database import Base
 
 
 class User(Base):
@@ -10,6 +10,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True),nullable=False, server_default=text('now()'))
+
 
 
 class Cultivos(Base):
@@ -20,7 +22,9 @@ class Cultivos(Base):
     tipo = Column(String, index=True)
     ubicacion = Column(String, index=True)
     usuario_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    userCultivo = relationship("User")
+    created_at = Column(TIMESTAMP(timezone=True),nullable=False, server_default=text('now()'))
+
+    #userCultivo = relationship("User")
 
 class Estaciones(Base):
     __tablename__ = "estacion"
@@ -28,25 +32,37 @@ class Estaciones(Base):
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String, index=True)
     cultivo_id = Column(Integer, ForeignKey("cultivo.id", ondelete="CASCADE"), nullable=False)
-    estacionCultivo = relationship("Cultivos")
+    created_at = Column(TIMESTAMP(timezone=True),nullable=False, server_default=text('now()'))
 
-class DHT22(Base):
-    __tablename__ = "dht_22"
-    Temeperatura = Column(FLOAT, nullable=False)
-    Huemedad = Column(FLOAT, nullable=False)
-    estacion_id = Column(Integer, ForeignKey("estacion.id", ondelete="CASCADE"), nullable=False)
-    estacion_dht22 = relationship("Estaciones")
+    #estacionCultivo = relationship("Cultivos")
 
-class PH_Suelo(Base):
-    __tablename__ = "ph_suelo"
+class LecturaSensores(Base):
+    __tablename__ = "lectura"
+    id = Column(Integer, primary_key=True, index=True)
+    temperatura = Column(FLOAT, nullable=False)
+    humedad = Column(FLOAT, nullable=False)
     Ph = Column(FLOAT, nullable=False)
-    estacion_id = Column(Integer, ForeignKey("estacion.id", ondelete="CASCADE"), nullable=False)
-    estacion_ph = relationship("Estaciones")    
 
+    estacion_id = Column(Integer, ForeignKey("estacion.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True),nullable=False, server_default=text('now()'))
+
+    #estacion_dht22 = relationship("Estaciones")
+  
 class Detecciones(Base):
     __tablename__ = "detecciones"
+    id = Column(Integer, primary_key=True, index=True)
     nombre = Column(Text, index=True)
     cultivo_id = Column(Integer, ForeignKey("cultivo.id", ondelete="CASCADE"), nullable=False)
-    detectcionCultivo = relationship("Cultivos")
+    created_at = Column(TIMESTAMP(timezone=True),nullable=False, server_default=text('now()'))
+
+    #deteccionCultivo = relationship("Cultivos")
     
-class Recomendaciones()
+class RecomendacionesRag(Base): 
+    __tablename__ = "recomendaciones"
+    id = Column(Integer, primary_key=True, index=True)
+    pregunta = Column(Text, index=True)
+    respuestas = Column(Text, index=True)
+    cultivo_id = Column(Integer, ForeignKey("cultivo.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True),nullable=False, server_default=text('now()'))
+
+
