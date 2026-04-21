@@ -1,0 +1,14 @@
+fastapi
+passlib
+uvicorn
+pydantic
+alembic
+psycopg2-binary
+python-dotenv 
+sqlalchemy
+langchain
+langchain-ollama
+langchain-chroma
+langchain-community
+pypdf
+pandas

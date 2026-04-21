@@ -1,17 +1,14 @@
 #include <WiFi.h>
 #include <esp_now.h>
-#include <DHT.h>
-#include <esp_wifi.h> 
+#include <esp_wifi.h>
 
-#define DHTPIN 33
-#define DHTTYPE DHT22
-
-DHT dht(DHTPIN, DHTTYPE);
+#define AOUT_PIN 34
+  // Pin analógico del sensor de suelo
 
 // MAC del receptor (ESP32 #3)
 uint8_t broadcastAddress[] = {0x94, 0x54, 0xC5, 0x77, 0x39, 0x78};
 
-// 🔥 ESTRUCTURA UNIFICADA
+// 🔥 ESTRUCTURA UNIFICADA (igual en los 3 ESP)
 typedef struct struct_message {
   int tipo;          // 1 = DHT, 2 = suelo
   float temperature;
@@ -21,16 +18,18 @@ typedef struct struct_message {
 
 struct_message dataToSend;
 
-unsigned long tiempo2 = 0;
+unsigned long lastTime = 0;
 
 void setup() {
   Serial.begin(115200);
-  dht.begin();
+
+  // Mejor rango ADC
+  analogSetAttenuation(ADC_11db);
 
   WiFi.mode(WIFI_STA);
   esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
 
-  Serial.print("MAC Emisor DHT: ");
+  Serial.print("MAC Emisor Suelo: ");
   Serial.println(WiFi.macAddress());
 
   if (esp_now_init() != ESP_OK) {
@@ -50,34 +49,26 @@ void setup() {
 }
 
 void loop() {
+  if (millis() - lastTime > 5000) {
+    lastTime = millis();
 
-  if (millis() - tiempo2 >= 5000) {
-    tiempo2 = millis();
-
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
-
-    if (isnan(h) || isnan(t)) {
-      Serial.println("Error leyendo DHT22");
-      return;
-    }
+    int value = analogRead(AOUT_PIN);
 
     // 🔥 LLENAR ESTRUCTURA
-    dataToSend.tipo = 1;           // Sensor DHT
-    dataToSend.temperature = t;
-    dataToSend.humidity = h;
-    dataToSend.moisture = 0;      // No aplica
+    dataToSend.tipo = 2;       // Sensor de suelo
+    dataToSend.temperature = 0;
+    dataToSend.humidity = 0;
+    dataToSend.moisture = value;
 
     esp_err_t result = esp_now_send(
-      broadcastAddress, 
-      (uint8_t *)&dataToSend, 
+      broadcastAddress,
+      (uint8_t *)&dataToSend,
       sizeof(dataToSend)
     );
 
     if (result == ESP_OK) {
-      Serial.print(t);
-      Serial.print(",");
-      Serial.println(h);
+      Serial.print("Humedad suelo enviada: ");
+      Serial.println(value);
     } else {
       Serial.println("Error al enviar");
     }

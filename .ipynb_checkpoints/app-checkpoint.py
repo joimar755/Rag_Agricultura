@@ -6,16 +6,13 @@ class dht22(BaseModel):
     temperatura: float
     humedad: float
 
-class Ph(dht22):
-    humedad_suelo: float
-
 
 
 app = FastAPI()
 
 
 @app.post("/sensor-data")
-async def receive_data(data: Ph):
-    print(f" Temp: {data.temperatura}°C  Hum: {data.humedad}% suelo:{data.humedad_suelo}")
+async def receive_data(data: dht22):
+    print(f" Temp: {data.temperatura}°C  Hum: {data.humedad}%")
     # Aquí puedes guardar en BD, publicar a MQTT, etc.
     return {"status": "ok", "received": data.dict()}
