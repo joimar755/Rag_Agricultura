@@ -1,14 +1,17 @@
 from typing import Optional
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 from models import Cultivos, Estaciones, LecturaSensores, RecomendacionesRag
 import models
 from database import engine , SessionLocal
 from sqlalchemy.orm import Session
+import cv2
+import numpy as np
+from ultralytics import YOLO
+from io import BytesIO
+from starlette.responses import JSONResponse
 
-
-    
 
 
 class Ph(BaseModel):
@@ -51,6 +54,9 @@ models.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
+
+
+yolo_model = YOLO("best.pt")
 
 
 # Dependency
@@ -116,3 +122,27 @@ async def create_cultivo(data: Ph, db: Session = Depends(get_db)):
         db.refresh(db_lectura)
         
         return {"data": db_lectura}
+    
+@app.post("/detect/")
+async def detect_objects(file: UploadFile = File(...)):
+    # Read image file
+    image_bytes = await file.read()
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    # Run YOLO model
+    results = yolo_model(image)
+    detections = []
+    
+    for result in results:
+        for box in result.boxes:
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            class_id = int(box.cls[0])
+            confidence = float(box.conf[0])
+            detections.append({
+                "label": yolo_model.names[class_id],
+                "confidence": confidence,
+                "bbox": [x1, y1, x2, y2]
+            })
+    
+    return JSONResponse(content={"detections": detections})

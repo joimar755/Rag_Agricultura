@@ -12,3 +12,6 @@ langchain-chroma
 langchain-community
 pypdf
 pandas
+ultralytics
+twilio
+python-multipart
