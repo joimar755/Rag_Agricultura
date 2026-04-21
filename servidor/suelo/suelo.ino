@@ -2,28 +2,30 @@
 #include <esp_now.h>
 #include <esp_wifi.h>
 
-#define AOUT_PIN 34
-  // Pin analógico del sensor de suelo
+#define AOUT_PIN 34  // Pin analógico sensor de suelo
 
 // MAC del receptor (ESP32 #3)
 uint8_t broadcastAddress[] = {0x94, 0x54, 0xC5, 0x77, 0x39, 0x78};
 
-// 🔥 ESTRUCTURA UNIFICADA (igual en los 3 ESP)
+// 🔥 ESTRUCTURA UNIFICADA
 typedef struct struct_message {
   int tipo;          // 1 = DHT, 2 = suelo
   float temperature;
   float humidity;
-  int moisture;
+  int moisture;      // porcentaje humedad suelo
 } struct_message;
 
 struct_message dataToSend;
 
 unsigned long lastTime = 0;
 
+// 🔧 CALIBRACIÓN (ajusta a tu sensor real)
+int wet = 1600;   // suelo húmedo
+int dry = 3800;   // suelo seco
+
 void setup() {
   Serial.begin(115200);
 
-  // Mejor rango ADC
   analogSetAttenuation(ADC_11db);
 
   WiFi.mode(WIFI_STA);
@@ -32,6 +34,7 @@ void setup() {
   Serial.print("MAC Emisor Suelo: ");
   Serial.println(WiFi.macAddress());
 
+  // Inicializar ESP-NOW
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error iniciando ESP-NOW");
     return;
@@ -49,25 +52,32 @@ void setup() {
 }
 
 void loop() {
-  if (millis() - lastTime > 5000) {
+  if (millis() - lastTime > 400) {
     lastTime = millis();
 
-    int value = analogRead(AOUT_PIN);
+    // 🔥 Lectura del sensor
+    int sensorReading = analogRead(AOUT_PIN);
 
-    // 🔥 LLENAR ESTRUCTURA
-    dataToSend.tipo = 2;       // Sensor de suelo
+    // 🔥 Conversión a porcentaje (TU VERSIÓN)
+    uint16_t moisturePercentage = map(sensorReading, wet, dry, 100, 0);
+    moisturePercentage = constrain(moisturePercentage, 0, 100);
+
+    // 🔥 Llenar estructura
+    dataToSend.tipo = 2;
     dataToSend.temperature = 0;
     dataToSend.humidity = 0;
-    dataToSend.moisture = value;
+    dataToSend.moisture = moisturePercentage;
 
+    // 🔥 Enviar ESP-NOW
     esp_err_t result = esp_now_send(
       broadcastAddress,
       (uint8_t *)&dataToSend,
       sizeof(dataToSend)
     );
 
+    // 🔥 Debug
     if (result == ESP_OK) {
-      Serial.println(value);
+        Serial.println(moisturePercentage);
     } else {
       Serial.println("Error al enviar");
     }
