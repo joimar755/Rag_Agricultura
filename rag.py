@@ -14,7 +14,18 @@ Here is the question to answer: {question}
 prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | model
 
-while True:
+
+def agronomy_query(question: str):
+    reviews = retriever.invoke(question)
+    
+    result = chain.invoke({
+        "reviews": reviews,
+        "question": question
+    })
+    
+    return result
+
+""" while True:
     print("\n\n-------------------------------")
     question = input("Ask your question (q to quit): ")
     print("\n\n")
@@ -23,4 +34,4 @@ while True:
     
     reviews = retriever.invoke(question)
     result = chain.invoke({"reviews": reviews, "question": question})
-    print(result)
+    print(result) """

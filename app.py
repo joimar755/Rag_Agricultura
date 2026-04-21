@@ -6,6 +6,7 @@ from models import Cultivos, Estaciones, LecturaSensores, RecomendacionesRag, De
 import models
 from database import engine , SessionLocal
 from sqlalchemy.orm import Session
+from rag import agronomy_query
 import cv2
 import numpy as np
 from ultralytics import YOLO
@@ -46,6 +47,9 @@ class recomendacion(BaseModel):
     pregunta: str
     respuestas:str
     cultivo_id: int
+    
+    class Config:
+        from_attributes = True
     
 
 
@@ -163,3 +167,24 @@ async def detect_objects(
         "cultivo_id": cultivo_id,
         "detecciones": detecciones
     }
+    
+@app.post("/recomendaciones")
+def crear_recomendacion(data:  recomendacion, db: Session = Depends(get_db)):
+    respuesta = agronomy_query(data.pregunta)
+    cultivo = db.query(Cultivos).order_by(Cultivos.id.desc()).first()
+
+    if not cultivo:
+        return {"error": "No hay cultivos registrados"}
+
+    cultivo_id = cultivo.id
+    nueva = RecomendacionesRag(
+        pregunta=data.pregunta,
+        respuestas=respuesta,
+        cultivo_id=cultivo_id   
+    )
+
+    db.add(nueva)
+    db.commit()
+    db.refresh(nueva)
+
+    return nueva
