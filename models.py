@@ -4,15 +4,6 @@ from sqlalchemy.orm import relationship
 from database import Base
 
 
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(255), nullable=False, unique=True)
-    password = Column(String(255), nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True),nullable=False, server_default=text('now()'))
-
-
 
 class Cultivos(Base):
     __tablename__ = "cultivo"
@@ -21,7 +12,6 @@ class Cultivos(Base):
     nombre = Column(String, index=True)
     tipo = Column(String, index=True)
     ubicacion = Column(String, index=True)
-    usuario_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True),nullable=False, server_default=text('now()'))
 
     #userCultivo = relationship("User")

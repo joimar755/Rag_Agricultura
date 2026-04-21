@@ -69,6 +69,7 @@ void enviarDatos() {
   jsonDoc["humedad"] = humGlobal;
   jsonDoc["humedad_suelo"] = soilGlobal;
 
+
   String jsonString;
   serializeJson(jsonDoc, jsonString);
 
