@@ -10,6 +10,7 @@ langchain
 langchain-ollama
 langchain-chroma
 langchain-community
+ollama
 pypdf
 pandas
 ultralytics

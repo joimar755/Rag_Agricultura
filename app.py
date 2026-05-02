@@ -7,6 +7,7 @@ import models
 from database import engine , SessionLocal
 from sqlalchemy.orm import Session
 from rag import agronomy_query
+from Rag_ollama import agronomy_query_rag
 import cv2
 import numpy as np
 from ultralytics import YOLO
@@ -45,8 +46,7 @@ class estacion(BaseModel):
     
 class recomendacion(BaseModel): 
     pregunta: str
-    respuestas:str
-    cultivo_id: int
+  
     
     class Config:
         from_attributes = True
@@ -170,7 +170,7 @@ async def detect_objects(
     
 @app.post("/recomendaciones")
 def crear_recomendacion(data:  recomendacion, db: Session = Depends(get_db)):
-    respuesta = agronomy_query(data.pregunta)
+    respuesta = agronomy_query_rag(data.pregunta)
     cultivo = db.query(Cultivos).order_by(Cultivos.id.desc()).first()
 
     if not cultivo:
