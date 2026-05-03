@@ -11,13 +11,11 @@ from langchain_ollama import OllamaEmbeddings
 # =========================
 # 🔐 CONFIG OLLAMA
 # =========================
-ollama_api_key = os.getenv('OLLAMA_API_KEY')
+ollama_api_key = os.getenv('OLLAMA_HOST')
 
 client = Client(
-    host='http://localhost:11434/',
-    headers={'Authorization': f'Bearer {ollama_api_key}'}
+    host=os.getenv("OLLAMA_HOST", "http://ollama:11434")
 )
-
 available_tools = {
     'web_fetch': web_fetch,
     'web_search': web_search

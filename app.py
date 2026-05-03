@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import FastAPI, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
+import uvicorn
 from models import Cultivos, Estaciones, LecturaSensores, RecomendacionesRag, Detecciones
 import models
 from database import engine , SessionLocal
@@ -188,3 +189,6 @@ def crear_recomendacion(data:  recomendacion, db: Session = Depends(get_db)):
     db.refresh(nueva)
 
     return nueva
+""" 
+if __name__ == "__main__":
+    uvicorn.run(app, host='0.0.0.0', port=8000) """
