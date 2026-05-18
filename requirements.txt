@@ -16,3 +16,7 @@ pandas
 ultralytics
 twilio
 python-multipart
+joblib
+pandas
+numpy 
+scikit-learn

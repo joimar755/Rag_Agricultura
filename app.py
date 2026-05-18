@@ -1,6 +1,7 @@
 from typing import Optional
-
+import joblib
 from fastapi import FastAPI, Depends, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 from models import Cultivos, Estaciones, LecturaSensores, RecomendacionesRag, Detecciones
@@ -15,7 +16,8 @@ from ultralytics import YOLO
 from io import BytesIO
 from starlette.responses import JSONResponse
 
-
+joblib_in = open("modelo_crop_recommendation.joblib","rb")
+model=joblib.load(joblib_in)
 
 class Ph(BaseModel):
     temperatura: float
@@ -51,7 +53,14 @@ class recomendacion(BaseModel):
     
     class Config:
         from_attributes = True
-    
+class Prediccion_Cultivo(BaseModel):
+     n:float
+     p:float
+     k:float
+     temperature:float
+     humidity:float
+     ph:float
+     rainfall:float
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -72,6 +81,14 @@ def get_db():
     finally:
         db.close()
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 """ @app.post("/sensor-data")
 async def receive_data(data: Ph , db: Session = Depends(get_db)):
@@ -189,6 +206,18 @@ def crear_recomendacion(data:  recomendacion, db: Session = Depends(get_db)):
     db.refresh(nueva)
 
     return nueva
+
+@app.post('/predict')
+def predict_car_type(data:Prediccion_Cultivo):
+    input_data = [[data.n,data.p,data.k,data.temperature,data.humidity,data.ph,data.rainfall]]
+
+    prediction = model.predict(input_data)
+    
+    return {
+        'prediction': prediction[0]
+    }
+
+
 """ 
 if __name__ == "__main__":
     uvicorn.run(app, host='0.0.0.0', port=8000) """
