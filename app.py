@@ -129,8 +129,8 @@ async def create_cultivo(estaciones: estacion, db: Session = Depends(get_db)):
     return {"data": db_estacion}
 
 @app.post("/sensor-data")
-async def create_cultivo(data: Ph, db: Session = Depends(get_db)):
-        estacion_id = data.estacion_id
+async def create_cultivo(datos: Ph, db: Session = Depends(get_db)):
+        estacion_id = datos.estacion_id
 
         if estacion_id is None:
              estacion = db.query(Estaciones).first()
@@ -138,12 +138,12 @@ async def create_cultivo(data: Ph, db: Session = Depends(get_db)):
         else:
             raise HTTPException(status_code=404, detail="estacion no existe")
 
-        db_lectura = LecturaSensores(temperatura = data.temperatura , humedad= data.humedad, Ph = data.humedad_suelo, estacion_id = estacion_id)
+        db_lectura = LecturaSensores(temperatura = datos.temperatura , humedad= datos.humedad, Ph = datos.humedad_suelo, estacion_id = estacion_id)
         db.add(db_lectura)
         db.commit()
         db.refresh(db_lectura)
         
-        return {"data": db_lectura}
+        return {db_lectura}
     
 
 @app.post("/detect/")
