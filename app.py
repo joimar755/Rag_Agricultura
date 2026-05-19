@@ -207,6 +207,20 @@ def crear_recomendacion(data:  recomendacion, db: Session = Depends(get_db)):
 
     return nueva
 
+@app.get("/sensor-data/latest")
+async def get_latest_sensor_data(db: Session = Depends(get_db)):
+    lectura = db.query(LecturaSensores).order_by(LecturaSensores.id.desc()).first()
+    if not lectura:
+        raise HTTPException(status_code=404, detail="No hay lecturas disponibles")
+    return lectura
+
+@app.get("/sensor-data/latest")
+async def get_latest_sensor_data(db: Session = Depends(get_db)):
+    lectura = db.query(LecturaSensores).order_by(LecturaSensores.id.desc()).first()
+    if not lectura:
+        raise HTTPException(status_code=404, detail="No hay lecturas disponibles")
+    return lectura
+
 @app.post('/predict')
 def predict_car_type(data:Prediccion_Cultivo):
     input_data = [[data.n,data.p,data.k,data.temperature,data.humidity,data.ph,data.rainfall]]
