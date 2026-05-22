@@ -15,6 +15,7 @@ prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | model
 
 
+
 def agronomy_query(question: str):
     reviews = retriever.invoke(question)
     

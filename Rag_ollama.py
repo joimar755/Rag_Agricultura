@@ -1,12 +1,12 @@
 import os
 from ollama import Client
 from ollama import web_search, web_fetch
-
 # RAG
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
+
 
 # =========================
 # 🔐 CONFIG OLLAMA

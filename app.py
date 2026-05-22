@@ -15,6 +15,10 @@ import numpy as np
 from ultralytics import YOLO
 from io import BytesIO
 from starlette.responses import JSONResponse
+import resend
+
+resend.api_key = "re_Cyp7yxJF_HJRtw5qRqvwkiXdFRWeS2AtH"
+
 
 joblib_in = open("modelo_crop_recommendation.joblib","rb")
 model=joblib.load(joblib_in)
@@ -38,7 +42,6 @@ class cultivoCreate(cultivo):
     class Config:
        orm_mode = True
 
-
 class detecciones(BaseModel):
     nombre: str
     cultivo_id: int
@@ -61,6 +64,29 @@ class Prediccion_Cultivo(BaseModel):
      humidity:float
      ph:float
      rainfall:float
+
+def enviar_alerta(temperatura, humedad):
+
+    params = {
+        "from": "onboarding@resend.dev",
+        "to": ["joimarjose19@gmail.com"],
+        "subject": "⚠️ Alerta crítica del sensor",
+        "html": f"""
+        <h2>Alerta del cultivo</h2>
+
+        <p>Se detectaron valores críticos:</p>
+
+        <ul>
+            <li>Temperatura: {temperatura}°C</li>
+            <li>Humedad: {humedad}%</li>
+        </ul>
+        """
+    }
+
+    email = resend.Emails.send(params)
+
+    print(email)
+
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -136,7 +162,13 @@ async def create_cultivo(datos: Ph, db: Session = Depends(get_db)):
              estacion = db.query(Estaciones).first()
              estacion_id = estacion.id
         else:
-            raise HTTPException(status_code=404, detail="estacion no existe")
+            raise HTTPException(status_code=404, detail="estacion no existe") 
+        
+
+        if  datos.temperatura >= 35 and datos.humedad >= 70:
+            enviar_alerta(datos.temperatura , datos.humedad)
+        else:
+            print("todo normal")
 
         db_lectura = LecturaSensores(temperatura = datos.temperatura , humedad= datos.humedad, Ph = datos.humedad_suelo, estacion_id = estacion_id)
         db.add(db_lectura)
@@ -144,7 +176,8 @@ async def create_cultivo(datos: Ph, db: Session = Depends(get_db)):
         db.refresh(db_lectura)
         
         return {db_lectura}
-    
+
+
 
 @app.post("/detect/")
 async def detect_objects(
@@ -190,7 +223,7 @@ async def detect_objects(
 def crear_recomendacion(data:  recomendacion, db: Session = Depends(get_db)):
     respuesta = agronomy_query_rag(data.pregunta)
     cultivo = db.query(Cultivos).order_by(Cultivos.id.desc()).first()
-
+    
     if not cultivo:
         return {"error": "No hay cultivos registrados"}
 
@@ -200,10 +233,9 @@ def crear_recomendacion(data:  recomendacion, db: Session = Depends(get_db)):
         respuestas=respuesta,
         cultivo_id=cultivo_id   
     )
-
     db.add(nueva)
     db.commit()
-    db.refresh(nueva)
+    db.refresh(nueva) 
 
     return nueva
 
@@ -214,16 +246,14 @@ async def get_latest_sensor_data(db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No hay lecturas disponibles")
     return lectura
 
+
 @app.post('/predict')
 def predict_car_type(data:Prediccion_Cultivo):
     input_data = [[data.n,data.p,data.k,data.temperature,data.humidity,data.ph,data.rainfall]]
-
     prediction = model.predict(input_data)
-    
     return {
         'prediction': prediction[0]
     }
-
 
 """ 
 if __name__ == "__main__":
